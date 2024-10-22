@@ -1,0 +1,11 @@
+create table PRODUTO
+(
+    id      INTEGER auto_increment,
+    NOME    varchar,
+    TIPO    varchar,
+    ESTOQUE double not null,
+    PRECO   double,
+    constraint PRODUTO_pk
+        primary key (id)
+);
+
