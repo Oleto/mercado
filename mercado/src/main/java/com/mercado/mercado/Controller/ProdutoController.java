@@ -5,6 +5,7 @@ import com.mercado.mercado.Service.ProdutoService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,7 +21,8 @@ public class ProdutoController {
 
     @PostMapping("/")
     public void salvar(@RequestBody Produto produto) {
-        try{produtoService.criarOuAtualizar(produto);}
+        try{
+            produtoService.criarOuAtualizar(produto);}
         catch(Exception e){
             log.error("e: ", e);
         }
@@ -35,9 +37,14 @@ public class ProdutoController {
         }return null;
     }
     @GetMapping("/{id}")
-    public Optional<Produto> BuscarPorId(@PathVariable int id) {
+    public ResponseEntity<Produto> BuscarPorId(@PathVariable int id) {
         try {
-            return produtoService.obterPorId(id);
+            Optional<Produto> produto = produtoService.obterPorId(id);
+            if (produto.isPresent()) {
+                return ResponseEntity.ok(produto.get());
+            }else {
+                return ResponseEntity.notFound().build();
+            }
         }catch (Exception e){
             log.error("e: ", e);
         }return null;
@@ -51,38 +58,36 @@ public class ProdutoController {
         }return null;
     }
     @DeleteMapping("/{id}")
-    public void DeletebyId(@PathVariable int id) {
-        try {
-            produtoService.deletar(id);
-        }catch (Exception e){
-            log.error("e: ", e);
+    public ResponseEntity<String> DeletebyId(@PathVariable int id) {
+        if (!produtoService.obterPorId(id).isPresent()) {
+            return ResponseEntity.status(404).body("Produto não encontrado para exclusão!");
         }
+        produtoService.deletar(id);
+        return ResponseEntity.ok("Produto deletado com sucesso!");
 
     }
     @GetMapping("/{tipo}")
-    public List<Produto> BuscarPorTipo(@PathVariable String tipo) {
+    public ResponseEntity<Produto> BuscarPorTipo(@PathVariable String tipo) {
         try {
-            return produtoService.obterPorTipo(tipo);
+            List<Produto> produtos = produtoService.obterPorTipo(tipo);
+            if (!produtos.isEmpty()) {
+                return ResponseEntity.ok(produtos.get(-produtos.size() - 1));
+            }
+
         }catch (Exception e){
             log.error("e: ", e);
         }return null;
     }
-    @GetMapping("/alterar")
-    public Produto Alterar(@RequestBody Produto produto) {
-       try {
-           return produtoService.criarOuAtualizar(produto);
-       }catch (Exception e){
-           log.error("e: ", e);
-       }return null;
+    @PutMapping("/alterar")
+    public ResponseEntity<String> Alterar(@RequestBody Produto produto) {
+        if (!produtoService.obterPorId(produto.getId()).isPresent()) {
+            return ResponseEntity.status(404).body("Produto não encontrado para exclusão!");
+        }
+        produtoService.deletar(produto.getId());
+        return ResponseEntity.ok("Produto deletado com sucesso!");
     }
-    @GetMapping("/alterar-estoque")
-    public Produto AlterarEstoque(@RequestBody Produto produto) {
-        try {
-            return produtoService.criarOuAtualizar(produto);
-        }catch (Exception e){
-            log.error("e: ", e);
-        }return null;
     }
 
 
-}
+
+
